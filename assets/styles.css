@@ -694,6 +694,61 @@ select:focus {
   font-weight: 800;
 }
 
+.voice-panel {
+  display: grid;
+  gap: 12px;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid rgba(13, 148, 136, 0.22);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.voice-heading,
+.voice-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.voice-heading span,
+.voice-style span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.voice-heading strong {
+  color: #075d56;
+  font-size: 0.84rem;
+}
+
+.voice-style {
+  display: grid;
+  gap: 6px;
+  min-width: min(230px, 100%);
+}
+
+.voice-style select {
+  min-height: 36px;
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.92);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.voice-panel.listening {
+  border-color: rgba(180, 64, 88, 0.38);
+  background: rgba(255, 247, 244, 0.78);
+}
+
 .chat-messages {
   height: min(52vh, 520px);
   min-height: 300px;
@@ -1063,16 +1118,19 @@ select:focus {
 
   .topbar-actions,
   .chat-controls,
+  .voice-controls,
   .generated-actions {
     width: 100%;
     justify-content: stretch;
   }
 
-  .model-picker {
+  .model-picker,
+  .voice-style {
     flex: 1 1 210px;
   }
 
   .topbar-actions > *,
+  .voice-controls > button,
   .generated-actions > * {
     flex: 1;
   }

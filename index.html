@@ -171,7 +171,7 @@
             <article>
               <span class="eyebrow">Assistant</span>
               <h3>AI Chatbot</h3>
-              <p id="home-chat-summary">OpenAI-ready chat memory</p>
+              <p id="home-chat-summary">Ollama Cloud-ready chat memory</p>
             </article>
             <article>
               <span class="eyebrow">Builder</span>
@@ -186,15 +186,16 @@
             <div>
               <span class="eyebrow">Assistant</span>
               <h3 id="chat-title">AI Chatbot</h3>
-              <p class="section-subtitle">ChatGPT-style bubbles, memory, suggested prompts, and OpenAI backend support.</p>
+              <p class="section-subtitle">ChatGPT-style bubbles, memory, suggested prompts, and Ollama Cloud backend support.</p>
             </div>
             <div class="chat-controls">
               <label class="model-picker" for="chat-model">
-                <span>OpenAI model</span>
+                <span>Ollama model</span>
                 <select id="chat-model">
-                  <option value="gpt-5.4-nano">GPT-5.4 nano</option>
-                  <option value="gpt-5.4-mini">GPT-5.4 mini</option>
-                  <option value="gpt-4.1-nano">GPT-4.1 nano</option>
+                  <option value="qwen3.5:cloud">Qwen3.5 Cloud</option>
+                  <option value="qwen3-vl:235b-cloud">Qwen3-VL 235B Cloud</option>
+                  <option value="qwen3-coder:480b-cloud">Qwen3-Coder Cloud</option>
+                  <option value="qwen3">Qwen3 Local/Cloud</option>
                 </select>
               </label>
               <button class="secondary-button compact" id="clear-chat" type="button">Clear</button>
@@ -202,6 +203,27 @@
           </div>
 
           <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
+
+          <div class="voice-panel" aria-label="Voice mode">
+            <div class="voice-heading">
+              <span>Voice mode</span>
+              <strong id="voice-status">Voice off</strong>
+            </div>
+            <div class="voice-controls">
+              <label class="voice-style" for="voice-style">
+                <span>Voice style</span>
+                <select id="voice-style">
+                  <option value="aurora">Aurora Guide</option>
+                  <option value="orbit">Orbit Coder</option>
+                  <option value="pulse">Pulse Builder</option>
+                  <option value="zenith">Zenith Tutor</option>
+                </select>
+              </label>
+              <button class="secondary-button compact" id="voice-toggle" type="button" aria-pressed="false">Speak replies</button>
+              <button class="secondary-button compact" id="voice-listen" type="button">Listen</button>
+              <button class="secondary-button compact" id="voice-stop" type="button">Stop</button>
+            </div>
+          </div>
 
           <div class="quick-prompts" aria-label="Quick prompts">
             <button type="button" data-prompt="Explain quantum computing simply">Explain</button>
@@ -253,7 +275,7 @@
             </label>
 
             <button class="primary-button full-width" type="submit">Build my app</button>
-            <p class="helper-note">Generated live in preview. Connect `/api/messages` for true OpenAI-powered generation.</p>
+            <p class="helper-note">Generated live in preview. Connect `/api/messages` for true Ollama Cloud-powered generation.</p>
           </form>
 
           <div class="generated-area hidden" id="generated-area">
@@ -311,7 +333,7 @@
               <span>Cleared after account step</span>
             </article>
             <article>
-              <strong>OpenAI-ready assistant</strong>
+              <strong>Ollama Cloud-ready assistant</strong>
               <span>Uses backend when connected, local fallback in static preview</span>
             </article>
             <article>

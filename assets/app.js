@@ -3,6 +3,8 @@ const PENDING_TTL_MS = 10 * 60 * 1000;
 const LOGIN_LOCK_MS = 30 * 1000;
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOGIN_ATTEMPTS_KEY = "createAI:loginAttempts";
+const VOICE_MODE_KEY = "createAI:voiceMode";
+const VOICE_STYLE_KEY = "createAI:voiceStyle";
 
 const state = {
   email: "",
@@ -51,6 +53,12 @@ const chatElements = {
   form: document.querySelector("#chat-form"),
   input: document.querySelector("#chat-input"),
   model: document.querySelector("#chat-model"),
+  voicePanel: document.querySelector(".voice-panel"),
+  voiceStatus: document.querySelector("#voice-status"),
+  voiceStyle: document.querySelector("#voice-style"),
+  voiceToggle: document.querySelector("#voice-toggle"),
+  voiceListen: document.querySelector("#voice-listen"),
+  voiceStop: document.querySelector("#voice-stop"),
   clear: document.querySelector("#clear-chat"),
 };
 
@@ -96,6 +104,33 @@ const installElements = {
   close: document.querySelector("#close-install-modal"),
 };
 
+const voiceProfiles = {
+  aurora: {
+    status: "Aurora Guide",
+    rate: 1.02,
+    pitch: 1.14,
+    voiceHints: ["samantha", "google us english", "natural", "aria"],
+  },
+  orbit: {
+    status: "Orbit Coder",
+    rate: 0.96,
+    pitch: 0.9,
+    voiceHints: ["alex", "daniel", "google uk english male", "fred"],
+  },
+  pulse: {
+    status: "Pulse Builder",
+    rate: 1.12,
+    pitch: 1.22,
+    voiceHints: ["karen", "tessa", "moira", "google australian english"],
+  },
+  zenith: {
+    status: "Zenith Tutor",
+    rate: 0.9,
+    pitch: 0.82,
+    voiceHints: ["victoria", "serena", "google uk english female", "ava"],
+  },
+};
+
 const appTypes = [
   { id: "general-assistant", title: "ChatGPT style", sub: "General answers" },
   { id: "coding-assistant", title: "Codex style", sub: "Code and debugging" },
@@ -138,6 +173,9 @@ let typingTimer = null;
 let createdProject = null;
 let generatedAppUrl = "";
 let deferredInstallPrompt = null;
+let voiceModeEnabled = false;
+let recognitionSession = null;
+let isListening = false;
 
 function cleanText(value, maxLength = 1500) {
   return String(value || "")
@@ -521,7 +559,7 @@ function showSection(name) {
 function createWelcomeMessage() {
   return {
     role: "assistant",
-    text: `Hi ${getFirstName()}. I can help like a ChatGPT or Codex style assistant. I will use ${getSelectedOpenAIModelLabel()} when the OpenAI backend is connected, and I will keep answering in local chatbot mode when it is not connected.`,
+    text: `Hi ${getFirstName()}. I can help like a ChatGPT or Codex style assistant. I will use ${getSelectedOllamaModelLabel()} when the Ollama Cloud backend is connected, and I will keep answering in local chatbot mode when it is not connected.`,
   };
 }
 
@@ -733,11 +771,11 @@ function buildKnownTopicAnswer(prompt) {
     },
     {
       keywords: ["api"],
-      answer: "An API is a way for one app to talk to another app or service. In Create_AI, `/api/messages` is the safe server route that can talk to OpenAI without exposing the API key in the browser.",
+      answer: "An API is a way for one app to talk to another app or service. In Create_AI, `/api/messages` is the safe server route that can talk to Ollama Cloud without exposing the API key in the browser.",
     },
     {
       keywords: ["backend"],
-      answer: "A backend is the server side of an app. It handles private work such as API keys, real login, email sending, database storage, and secure OpenAI requests.",
+      answer: "A backend is the server side of an app. It handles private work such as API keys, real login, email sending, database storage, and secure Ollama Cloud requests.",
     },
     {
       keywords: ["frontend"],
@@ -761,7 +799,7 @@ function buildKnownTopicAnswer(prompt) {
     },
     {
       keywords: ["cloud"],
-      answer: "The cloud means servers on the internet that run apps, store data, or connect services. For Create_AI, OpenAI should run through a cloud or server backend, not directly from browser code.",
+      answer: "The cloud means servers on the internet that run apps, store data, or connect services. For Create_AI, Ollama Cloud should run through a server backend, not directly from browser code.",
     },
     {
       keywords: ["google chrome", "chrome"],
@@ -928,20 +966,20 @@ function buildLocalAssistantReply(prompt) {
   return buildGeneralOfflineAnswer(text);
 }
 
-function getSelectedOpenAIModel() {
-  return chatElements.model?.value || "gpt-5.4-nano";
+function getSelectedOllamaModel() {
+  return chatElements.model?.value || "gpt-oss:120b";
 }
 
-function getSelectedOpenAIModelLabel() {
-  return chatElements.model?.selectedOptions?.[0]?.textContent || "GPT-5.4 nano";
+function getSelectedOllamaModelLabel() {
+  return chatElements.model?.selectedOptions?.[0]?.textContent || "gpt-oss 120B cloud";
 }
 
-async function callOpenAIBackend() {
+async function callOllamaBackend() {
   const response = await fetch("/api/messages", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: getSelectedOpenAIModel(),
+      model: getSelectedOllamaModel(),
       max_tokens: 1000,
       system: "You are the Create_AI Assistant, a friendly, concise AI helper. Follow safety rules: refuse harmful, illegal, deceptive, credential-stealing, malware, self-harm, hateful, or sexual-minor content. Be helpful, warm, and clear.",
       messages: chatMessages
@@ -951,7 +989,7 @@ async function callOpenAIBackend() {
   });
 
   if (!response.ok) {
-    throw new Error("OpenAI backend is not connected.");
+    throw new Error("Ollama Cloud backend is not connected.");
   }
 
   const data = await response.json();
@@ -969,13 +1007,13 @@ async function getAssistantReply(prompt) {
   }
 
   try {
-    const backendReply = await callOpenAIBackend();
+    const backendReply = await callOllamaBackend();
 
     if (backendReply) {
       return backendReply;
     }
   } catch {
-    // Static previews fall back locally when no OpenAI backend is deployed.
+    // Static previews fall back locally when no Ollama Cloud backend is deployed.
   }
 
   return buildLocalAssistantReply(prompt);
