@@ -661,6 +661,39 @@ select:focus {
   background: rgba(13, 148, 136, 0.12);
 }
 
+.chat-controls {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.model-picker {
+  display: grid;
+  gap: 6px;
+  min-width: min(240px, 100%);
+}
+
+.model-picker span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 850;
+  text-transform: uppercase;
+}
+
+.model-picker select {
+  min-height: 36px;
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.92);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
 .chat-messages {
   height: min(52vh, 520px);
   min-height: 300px;
@@ -1029,9 +1062,14 @@ select:focus {
   }
 
   .topbar-actions,
+  .chat-controls,
   .generated-actions {
     width: 100%;
     justify-content: stretch;
+  }
+
+  .model-picker {
+    flex: 1 1 210px;
   }
 
   .topbar-actions > *,

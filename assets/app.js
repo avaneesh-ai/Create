@@ -50,6 +50,7 @@ const chatElements = {
   messages: document.querySelector("#chat-messages"),
   form: document.querySelector("#chat-form"),
   input: document.querySelector("#chat-input"),
+  model: document.querySelector("#chat-model"),
   clear: document.querySelector("#clear-chat"),
 };
 
@@ -516,7 +517,7 @@ function showSection(name) {
 function createWelcomeMessage() {
   return {
     role: "assistant",
-    text: `Hi ${getFirstName()}. I can help like a ChatGPT, Claude, or Codex style assistant. I use the Claude backend when it is connected, and a local fallback in static preview.`,
+    text: `Hi ${getFirstName()}. I can help like a ChatGPT, Claude, or Codex style assistant. I will use ${getSelectedClaudeModelLabel()} when the Claude backend is connected, and I will keep answering in local chatbot mode when it is not connected.`,
   };
 }
 
@@ -671,9 +672,63 @@ function buildAppPlanningAnswer(prompt) {
   return `${type} plan:\n1. Project name: give it a clear product name.\n2. Purpose/problem: describe what the assistant should solve.\n3. User input: list prompts, code, files described as text, examples, or tasks the user gives.\n4. Expected output: answer, plan, generated code, explanation, or downloadable app.\n5. Refinement: use the follow-up update box after the first version is generated.\n\nCreate_AI now uses those four fields as the source of truth instead of inventing a random purpose.`;
 }
 
+function buildKnownTopicAnswer(prompt) {
+  const lower = prompt.toLowerCase();
+  const topics = [
+    {
+      keywords: ["rain"],
+      answer: "Rain happens when water evaporates, rises into the air, cools into clouds, and then falls back to the ground as droplets when the clouds become heavy enough.",
+    },
+    {
+      keywords: ["artificial intelligence", " ai ", "ai"],
+      answer: "Artificial intelligence is software that can recognize patterns, understand prompts, generate text or images, make predictions, and help users complete tasks.",
+    },
+    {
+      keywords: ["chatbot", "chat bot"],
+      answer: "A chatbot is an app that takes a message from a user, understands the intent, and returns a helpful response. A stronger chatbot keeps conversation memory and uses a model or local rules to answer.",
+    },
+    {
+      keywords: ["api"],
+      answer: "An API is a way for one app to talk to another app or service. In Create_AI, `/api/messages` is the safe server route that can talk to Claude without exposing the API key in the browser.",
+    },
+    {
+      keywords: ["backend"],
+      answer: "A backend is the server side of an app. It handles private work such as API keys, real login, email sending, database storage, and secure Claude requests.",
+    },
+    {
+      keywords: ["frontend"],
+      answer: "A frontend is the part of an app users see and use in the browser, such as screens, buttons, forms, chat bubbles, and previews.",
+    },
+    {
+      keywords: ["pwa", "install app", "installable"],
+      answer: "A PWA is a web app that can be installed from the browser. It uses a manifest and service worker so Chrome can offer an install button after the site is hosted correctly.",
+    },
+    {
+      keywords: ["password"],
+      answer: "A safer password is long, unique, and hard to guess. It should not be stored in browser code. A production app should hash passwords on a secure backend.",
+    },
+    {
+      keywords: ["cloud"],
+      answer: "The cloud means servers on the internet that run apps, store data, or connect services. For Create_AI, Claude should run through a cloud or server backend, not directly from browser code.",
+    },
+    {
+      keywords: ["google chrome", "chrome"],
+      answer: "Google Chrome can run Create_AI as a normal website. If it is hosted over HTTPS with the manifest and service worker, Chrome can also show an install option.",
+    },
+  ];
+
+  const matched = topics.find((topic) => includesAny(` ${lower} `, topic.keywords));
+  return matched ? matched.answer : "";
+}
+
 function buildExplanationAnswer(prompt) {
   const lower = prompt.toLowerCase();
   const subject = getPromptSubject(prompt);
+  const knownAnswer = buildKnownTopicAnswer(prompt);
+
+  if (knownAnswer) {
+    return knownAnswer;
+  }
 
   if (includesAny(lower, ["chatgpt", "claude", "codex"])) {
     return "ChatGPT, Claude, and Codex are assistant-style apps. They read a user prompt, infer the goal, and return useful writing, code, explanations, or plans. Create_AI now lets the user choose that kind of app before generating the output.";
@@ -683,13 +738,58 @@ function buildExplanationAnswer(prompt) {
     return "A safer app keeps secrets out of storage, limits input size, validates fields, blocks risky requests, isolates generated previews, and avoids sending user prompts to unknown places.";
   }
 
-  return `Simple explanation of ${subject}:\n1. Define what it is.\n2. Identify the problem it solves.\n3. Decide what input the user gives.\n4. Return an output the user can use immediately.`;
+  if (includesAny(lower, ["what causes", "why does", "why do"])) {
+    return `The cause of ${subject} usually comes from a chain of conditions. Look for what changed first, what effect it created, and what evidence connects the two.`;
+  }
+
+  if (includesAny(lower, ["who is", "where is", "when is", "latest", "today"])) {
+    return `In local mode, I can answer the question format, but I cannot verify live facts from the internet. For ${subject}, check the newest trusted source if the answer may have changed recently.`;
+  }
+
+  return `Simple explanation of ${subject}:\n1. Meaning: this is the main topic you are asking about.\n2. Why it matters: it connects to the result you want.\n3. How to use it: turn it into a clear next step, example, or decision.\n4. What I can do next: explain it more simply, make a plan, write code, or turn it into an app idea.`;
 }
 
 function buildCompareAnswer(prompt) {
   const subject = getPromptSubject(prompt);
 
   return `Comparison for ${subject}:\n1. ChatGPT style is best for broad question answering and everyday tasks.\n2. Claude style is best for longer writing, reasoning, and careful review.\n3. Codex style is best for code, debugging, and app-building steps.\n\nFor Create_AI, the four builder fields should describe which style the user wants, then the generator follows that description.`;
+}
+
+function buildIdeaAnswer(prompt) {
+  const subject = getPromptSubject(prompt);
+
+  return `Ideas for ${subject}:\n1. Start with the smallest useful version.\n2. Add one feature that saves time for the user.\n3. Make the input simple and the output clear.\n4. Add a download, copy, or share action.\n5. Improve it with follow-up requests after the first version works.`;
+}
+
+function buildSummaryAnswer(prompt) {
+  const subject = getPromptSubject(prompt);
+
+  return `Summary of ${subject}:\n1. Main point: focus on the user goal.\n2. Important detail: define the input clearly.\n3. Useful result: return something the user can act on.\n4. Next step: ask for missing details only when they are truly needed.`;
+}
+
+function buildQuestionAnswer(prompt) {
+  const lower = prompt.toLowerCase();
+  const subject = getPromptSubject(prompt);
+
+  if (includesAny(lower, ["how do i", "how can i", "how to"])) {
+    return `Here is how to handle ${subject}:\n1. Decide the exact outcome you want.\n2. Break it into the smallest first step.\n3. Gather the needed input or information.\n4. Create the first version.\n5. Test it, then improve the weak part.`;
+  }
+
+  if (includesAny(lower, ["why"])) {
+    return `A good way to think about ${subject} is cause and effect:\n1. What changed?\n2. What result did it create?\n3. What evidence supports that result?\n4. What can be improved next?`;
+  }
+
+  if (includesAny(lower, ["should i", "which", "best"])) {
+    return `For ${subject}, choose the option that is simplest, safest, and easiest to test first. If two choices look equal, pick the one that gives a working result faster, then improve it with feedback.`;
+  }
+
+  return buildExplanationAnswer(prompt);
+}
+
+function buildGeneralOfflineAnswer(prompt) {
+  const subject = getPromptSubject(prompt);
+
+  return `Here is a helpful answer for ${subject}:\n1. Goal: make the answer useful for what you are trying to do.\n2. Key idea: focus on the problem, the input, and the output.\n3. Practical answer: start with a small working version, then improve it with one update at a time.\n4. Next step: tell me the format you want, such as explanation, code, plan, app idea, email, list, or summary.`;
 }
 
 function buildLocalAssistantReply(prompt) {
@@ -713,6 +813,14 @@ function buildLocalAssistantReply(prompt) {
     return mathAnswer;
   }
 
+  if (includesAny(lower, ["summarize", "summary", "shorten", "brief"])) {
+    return buildSummaryAnswer(text);
+  }
+
+  if (includesAny(lower, ["idea", "ideas", "brainstorm", "suggest", "recommend"])) {
+    return buildIdeaAnswer(text);
+  }
+
   if (includesAny(lower, ["codex", "chatgpt", "claude", "build app", "create app", "app builder", "ai app"])) {
     return buildAppPlanningAnswer(text);
   }
@@ -733,11 +841,19 @@ function buildLocalAssistantReply(prompt) {
     return `Plan for ${getPromptSubject(text)}:\n1. Set the exact goal.\n2. Write the purpose/problem clearly.\n3. Define what the user gives as input.\n4. Define the output the user should receive.\n5. Generate the first version.\n6. Apply follow-up updates until it matches the need.`;
   }
 
-  if (text.includes("?") || includesAny(lower, ["what", "why", "how", "explain"])) {
-    return buildExplanationAnswer(text);
+  if (text.includes("?") || includesAny(lower, ["what", "why", "how", "explain", "who", "where", "when", "which", "should"])) {
+    return buildQuestionAnswer(text);
   }
 
-  return `Best answer from your prompt:\n1. Main focus: ${getPromptSubject(text)}.\n2. Needed input: one clear example from the user.\n3. Best output: a useful answer, plan, code fix, writing draft, or generated app.\n4. Next step: choose the output format and I will shape the result around it.`;
+  return buildGeneralOfflineAnswer(text);
+}
+
+function getSelectedClaudeModel() {
+  return chatElements.model?.value || "claude-sonnet-4-6";
+}
+
+function getSelectedClaudeModelLabel() {
+  return chatElements.model?.selectedOptions?.[0]?.textContent || "Claude Sonnet 4.6";
 }
 
 async function callClaudeBackend() {
@@ -745,7 +861,7 @@ async function callClaudeBackend() {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: "claude-sonnet-4-20250514",
+      model: getSelectedClaudeModel(),
       max_tokens: 1000,
       system: "You are the Create_AI Assistant, a friendly, concise AI helper. Follow safety rules: refuse harmful, illegal, deceptive, credential-stealing, malware, self-harm, hateful, or sexual-minor content. Be helpful, warm, and clear.",
       messages: chatMessages
@@ -787,6 +903,9 @@ async function getAssistantReply(prompt) {
 
 function setChatBusy(isBusy) {
   chatElements.input.disabled = isBusy;
+  if (chatElements.model) {
+    chatElements.model.disabled = isBusy;
+  }
   chatElements.form.querySelector("button").disabled = isBusy;
 }
 
