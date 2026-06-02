@@ -99,7 +99,7 @@ const installElements = {
 const appTypes = [
   { id: "general-assistant", title: "ChatGPT style", sub: "General answers" },
   { id: "coding-assistant", title: "Codex style", sub: "Code and debugging" },
-  { id: "writing-assistant", title: "Claude style", sub: "Writing and reasoning" },
+  { id: "writing-assistant", title: "ChatGPT style", sub: "Writing and reasoning" },
   { id: "study-tutor", title: "Study tutor", sub: "Lessons and quizzes" },
   { id: "support-chatbot", title: "Support bot", sub: "Customer help" },
   { id: "business-dashboard", title: "Dashboard", sub: "Data and tasks" },
@@ -162,6 +162,10 @@ function safeJson(value) {
 
 function includesAny(text, terms) {
   return terms.some((term) => text.includes(term));
+}
+
+function escapeRegExp(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function slugify(value) {
@@ -517,7 +521,7 @@ function showSection(name) {
 function createWelcomeMessage() {
   return {
     role: "assistant",
-    text: `Hi ${getFirstName()}. I can help like a ChatGPT, Claude, or Codex style assistant. I will use ${getSelectedClaudeModelLabel()} when the Claude backend is connected, and I will keep answering in local chatbot mode when it is not connected.`,
+    text: `Hi ${getFirstName()}. I can help like a ChatGPT or Codex style assistant. I will use ${getSelectedOpenAIModelLabel()} when the OpenAI backend is connected, and I will keep answering in local chatbot mode when it is not connected.`,
   };
 }
 
@@ -585,10 +589,26 @@ function removeTypingMessage(bubble) {
 }
 
 function getPromptSubject(prompt) {
-  return cleanText(prompt, 260)
-    .replace(/^(please\s+)?(can you|could you|would you|help me|i need|i want|tell me|give me|make|create|build|write|draft|compose|explain|summarize|compare|review|fix|improve|generate|answer)\b/i, "")
+  const cleaned = cleanText(prompt, 260).trim();
+
+  return cleaned
+    .replace(/^(please\s+)?(can you|could you|would you|help me|i need|i want|tell me|give me|make|create|build|write|draft|compose|explain|summarize|compare|review|fix|improve|generate|answer)\b\s*/i, "")
+    .replace(/^(what is|what are|what does|what causes|why should|why does|why do|how does|how do|how can i|how to|who is|where is|when is|which is|should i)\b\s*/i, "")
+    .replace(/^(i|we|you)\s+/i, "")
+    .replace(/^(bullet points for|bullets for|list of|points for|learn|study|understand)\b\s*/i, "")
+    .replace(/[?!.]+$/g, "")
     .replace(/^(a|an|the|about|for|to|with|this|that)\s+/i, "")
-    .trim() || "your request";
+    .trim() || cleaned || "your question";
+}
+
+function formatTopic(value) {
+  const topic = cleanText(value, 220).replace(/\s+/g, " ").trim();
+
+  if (!topic) {
+    return "that topic";
+  }
+
+  return topic.charAt(0).toUpperCase() + topic.slice(1);
 }
 
 function isUnsafePrompt(text) {
@@ -680,6 +700,30 @@ function buildKnownTopicAnswer(prompt) {
       answer: "Rain happens when water evaporates, rises into the air, cools into clouds, and then falls back to the ground as droplets when the clouds become heavy enough.",
     },
     {
+      keywords: ["water cycle"],
+      answer: "The water cycle is the movement of water between oceans, land, air, clouds, and rain. It includes evaporation, condensation, precipitation, and collection.",
+    },
+    {
+      keywords: ["photosynthesis"],
+      answer: "Photosynthesis is how plants use sunlight, water, and carbon dioxide to make food. It also releases oxygen into the air.",
+    },
+    {
+      keywords: ["gravity"],
+      answer: "Gravity is the force that pulls objects toward each other. On Earth, it pulls things toward the ground and keeps the Moon moving around Earth.",
+    },
+    {
+      keywords: ["electricity"],
+      answer: "Electricity is the movement of electric charge. It powers lights, phones, computers, motors, and many other devices.",
+    },
+    {
+      keywords: ["internet"],
+      answer: "The internet is a global network of connected computers and servers. It lets devices send information, open websites, use apps, and communicate across the world.",
+    },
+    {
+      keywords: ["blockchain"],
+      answer: "Blockchain is a shared digital record that stores information in connected blocks. It is often used when people want a record that is hard to change without everyone noticing.",
+    },
+    {
       keywords: ["artificial intelligence", " ai ", "ai"],
       answer: "Artificial intelligence is software that can recognize patterns, understand prompts, generate text or images, make predictions, and help users complete tasks.",
     },
@@ -689,15 +733,23 @@ function buildKnownTopicAnswer(prompt) {
     },
     {
       keywords: ["api"],
-      answer: "An API is a way for one app to talk to another app or service. In Create_AI, `/api/messages` is the safe server route that can talk to Claude without exposing the API key in the browser.",
+      answer: "An API is a way for one app to talk to another app or service. In Create_AI, `/api/messages` is the safe server route that can talk to OpenAI without exposing the API key in the browser.",
     },
     {
       keywords: ["backend"],
-      answer: "A backend is the server side of an app. It handles private work such as API keys, real login, email sending, database storage, and secure Claude requests.",
+      answer: "A backend is the server side of an app. It handles private work such as API keys, real login, email sending, database storage, and secure OpenAI requests.",
     },
     {
       keywords: ["frontend"],
       answer: "A frontend is the part of an app users see and use in the browser, such as screens, buttons, forms, chat bubbles, and previews.",
+    },
+    {
+      keywords: ["website", "web app"],
+      answer: "A website or web app runs in the browser. It usually uses HTML for structure, CSS for design, JavaScript for behavior, and sometimes a backend for private or powerful features.",
+    },
+    {
+      keywords: ["mobile app"],
+      answer: "A mobile app is software built for phones or tablets. It can be native, like an iPhone or Android app, or web-based as a PWA that installs from the browser.",
     },
     {
       keywords: ["pwa", "install app", "installable"],
@@ -709,7 +761,7 @@ function buildKnownTopicAnswer(prompt) {
     },
     {
       keywords: ["cloud"],
-      answer: "The cloud means servers on the internet that run apps, store data, or connect services. For Create_AI, Claude should run through a cloud or server backend, not directly from browser code.",
+      answer: "The cloud means servers on the internet that run apps, store data, or connect services. For Create_AI, OpenAI should run through a cloud or server backend, not directly from browser code.",
     },
     {
       keywords: ["google chrome", "chrome"],
@@ -717,7 +769,7 @@ function buildKnownTopicAnswer(prompt) {
     },
   ];
 
-  const matched = topics.find((topic) => includesAny(` ${lower} `, topic.keywords));
+  const matched = topics.find((topic) => topic.keywords.some((keyword) => new RegExp(`\\b${escapeRegExp(keyword.trim())}\\b`).test(lower)));
   return matched ? matched.answer : "";
 }
 
@@ -743,10 +795,10 @@ function buildExplanationAnswer(prompt) {
   }
 
   if (includesAny(lower, ["who is", "where is", "when is", "latest", "today"])) {
-    return `In local mode, I can answer the question format, but I cannot verify live facts from the internet. For ${subject}, check the newest trusted source if the answer may have changed recently.`;
+    return `${formatTopic(subject)} may depend on current or changing information. My best answer is to check the newest trusted source, then I can help explain it, summarize it, or turn it into a plan.`;
   }
 
-  return `Simple explanation of ${subject}:\n1. Meaning: this is the main topic you are asking about.\n2. Why it matters: it connects to the result you want.\n3. How to use it: turn it into a clear next step, example, or decision.\n4. What I can do next: explain it more simply, make a plan, write code, or turn it into an app idea.`;
+  return `${formatTopic(subject)} can be understood in three parts:\n1. Meaning: what the topic is about.\n2. Importance: why it matters or what problem it solves.\n3. Example: how someone would use it in real life.\n\nA good next step is to ask for either a simple explanation, examples, pros and cons, or a step-by-step plan.`;
 }
 
 function buildCompareAnswer(prompt) {
@@ -767,29 +819,53 @@ function buildSummaryAnswer(prompt) {
   return `Summary of ${subject}:\n1. Main point: focus on the user goal.\n2. Important detail: define the input clearly.\n3. Useful result: return something the user can act on.\n4. Next step: ask for missing details only when they are truly needed.`;
 }
 
+function buildLearningAnswer(prompt) {
+  const subject = getPromptSubject(prompt);
+
+  return `To learn ${subject}, use this simple path:\n1. Start with the basic meaning and one example.\n2. Practice the smallest useful task.\n3. Check what confused you.\n4. Repeat with a slightly harder task.\n5. Teach it back in your own words.`;
+}
+
 function buildQuestionAnswer(prompt) {
   const lower = prompt.toLowerCase();
   const subject = getPromptSubject(prompt);
+  const knownAnswer = buildKnownTopicAnswer(prompt);
 
   if (includesAny(lower, ["how do i", "how can i", "how to"])) {
     return `Here is how to handle ${subject}:\n1. Decide the exact outcome you want.\n2. Break it into the smallest first step.\n3. Gather the needed input or information.\n4. Create the first version.\n5. Test it, then improve the weak part.`;
   }
 
   if (includesAny(lower, ["why"])) {
-    return `A good way to think about ${subject} is cause and effect:\n1. What changed?\n2. What result did it create?\n3. What evidence supports that result?\n4. What can be improved next?`;
+    return `Why ${subject}: the useful answer is cause and effect. First identify what changed, then what result happened, then what evidence connects them. If you want, I can turn that into a shorter answer, a school-style answer, or a detailed explanation.`;
   }
 
   if (includesAny(lower, ["should i", "which", "best"])) {
     return `For ${subject}, choose the option that is simplest, safest, and easiest to test first. If two choices look equal, pick the one that gives a working result faster, then improve it with feedback.`;
   }
 
+  if (knownAnswer) {
+    return knownAnswer;
+  }
+
+  if (includesAny(lower, ["what is", "what are", "what does"])) {
+    return `${formatTopic(subject)} is the topic you asked about. The simplest way to understand it is:\n1. What it means.\n2. Why people use it or care about it.\n3. One real example.\n\nTell me if you want it explained like a beginner, in one sentence, or with examples.`;
+  }
+
   return buildExplanationAnswer(prompt);
 }
 
 function buildGeneralOfflineAnswer(prompt) {
+  const lower = prompt.toLowerCase();
   const subject = getPromptSubject(prompt);
 
-  return `Here is a helpful answer for ${subject}:\n1. Goal: make the answer useful for what you are trying to do.\n2. Key idea: focus on the problem, the input, and the output.\n3. Practical answer: start with a small working version, then improve it with one update at a time.\n4. Next step: tell me the format you want, such as explanation, code, plan, app idea, email, list, or summary.`;
+  if (includesAny(lower, ["list", "points", "bullets"])) {
+    return `Here are useful points about ${subject}:\n1. Start with the main idea.\n2. Add the most important detail.\n3. Give one example.\n4. End with the next action.`;
+  }
+
+  if (includesAny(lower, ["help", "stuck", "confused"])) {
+    return `I can help with ${subject}. The easiest way forward is:\n1. Say what result you want.\n2. Share what you already tried.\n3. Pick the part that is confusing.\n4. I will turn it into a clear next step.`;
+  }
+
+  return `I understand your question about ${subject}. Here is a useful answer:\n\n${formatTopic(subject)} should be handled by first finding the main goal, then breaking it into simple parts, then choosing the next practical step. If the topic is an app, define the input and output. If it is writing, decide the tone and audience. If it is learning, use a simple explanation plus one example.`;
 }
 
 function buildLocalAssistantReply(prompt) {
@@ -821,6 +897,10 @@ function buildLocalAssistantReply(prompt) {
     return buildIdeaAnswer(text);
   }
 
+  if (includesAny(lower, ["learn", "study", "understand", "teach me"])) {
+    return buildLearningAnswer(text);
+  }
+
   if (includesAny(lower, ["codex", "chatgpt", "claude", "build app", "create app", "app builder", "ai app"])) {
     return buildAppPlanningAnswer(text);
   }
@@ -848,20 +928,20 @@ function buildLocalAssistantReply(prompt) {
   return buildGeneralOfflineAnswer(text);
 }
 
-function getSelectedClaudeModel() {
-  return chatElements.model?.value || "claude-sonnet-4-6";
+function getSelectedOpenAIModel() {
+  return chatElements.model?.value || "gpt-5.4-nano";
 }
 
-function getSelectedClaudeModelLabel() {
-  return chatElements.model?.selectedOptions?.[0]?.textContent || "Claude Sonnet 4.6";
+function getSelectedOpenAIModelLabel() {
+  return chatElements.model?.selectedOptions?.[0]?.textContent || "GPT-5.4 nano";
 }
 
-async function callClaudeBackend() {
+async function callOpenAIBackend() {
   const response = await fetch("/api/messages", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: getSelectedClaudeModel(),
+      model: getSelectedOpenAIModel(),
       max_tokens: 1000,
       system: "You are the Create_AI Assistant, a friendly, concise AI helper. Follow safety rules: refuse harmful, illegal, deceptive, credential-stealing, malware, self-harm, hateful, or sexual-minor content. Be helpful, warm, and clear.",
       messages: chatMessages
@@ -871,7 +951,7 @@ async function callClaudeBackend() {
   });
 
   if (!response.ok) {
-    throw new Error("Claude backend is not connected.");
+    throw new Error("OpenAI backend is not connected.");
   }
 
   const data = await response.json();
@@ -889,13 +969,13 @@ async function getAssistantReply(prompt) {
   }
 
   try {
-    const backendReply = await callClaudeBackend();
+    const backendReply = await callOpenAIBackend();
 
     if (backendReply) {
       return backendReply;
     }
   } catch {
-    // Static previews fall back locally when no Claude backend is deployed.
+    // Static previews fall back locally when no OpenAI backend is deployed.
   }
 
   return buildLocalAssistantReply(prompt);

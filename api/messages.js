@@ -1,6 +1,7 @@
 const ALLOWED_MODELS = new Set([
-  "claude-sonnet-4-6",
-  "claude-haiku-4-5-20251001",
+  "gpt-5.4-nano",
+  "gpt-5.4-mini",
+  "gpt-4.1-nano",
 ]);
 
 const SYSTEM_PROMPT = [
@@ -63,13 +64,30 @@ function normalizeMessage(message) {
   };
 }
 
-module.exports = async function handler(req, res) {
-  if (req.method !== "POST") {
-    return sendJson(res, 405, { error: "Use POST for Claude messages." });
+function extractOutputText(data) {
+  if (typeof data?.output_text === "string") {
+    return data.output_text.trim();
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return sendJson(res, 503, { error: "Claude backend is not configured." });
+  if (!Array.isArray(data?.output)) {
+    return "";
+  }
+
+  return data.output
+    .flatMap((item) => Array.isArray(item.content) ? item.content : [])
+    .filter((item) => item.type === "output_text" || item.type === "text")
+    .map((item) => item.text || "")
+    .join("\n")
+    .trim();
+}
+
+module.exports = async function handler(req, res) {
+  if (req.method !== "POST") {
+    return sendJson(res, 405, { error: "Use POST for OpenAI messages." });
+  }
+
+  if (!process.env.OPENAI_API_KEY) {
+    return sendJson(res, 503, { error: "OpenAI backend is not configured." });
   }
 
   let body;
@@ -80,42 +98,46 @@ module.exports = async function handler(req, res) {
     return sendJson(res, 400, { error: "Invalid message request." });
   }
 
-  const model = ALLOWED_MODELS.has(body.model) ? body.model : "claude-sonnet-4-6";
+  const model = ALLOWED_MODELS.has(body.model) ? body.model : "gpt-5.4-nano";
   const maxTokens = Math.min(Math.max(Number(body.max_tokens) || 1000, 128), 2000);
   const messages = Array.isArray(body.messages)
     ? body.messages.map(normalizeMessage).filter(Boolean).slice(-24)
     : [];
 
   if (!messages.some((message) => message.role === "user")) {
-    return sendJson(res, 400, { error: "Add a user message before calling Claude." });
+    return sendJson(res, 400, { error: "Add a user message before calling OpenAI." });
   }
 
   try {
-    const claudeResponse = await fetch("https://api.anthropic.com/v1/messages", {
+    const openAIResponse = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": process.env.ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
+        "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
         model,
-        max_tokens: maxTokens,
-        system: SYSTEM_PROMPT,
-        messages,
+        instructions: SYSTEM_PROMPT,
+        input: messages,
+        max_output_tokens: maxTokens,
       }),
     });
 
-    const data = await claudeResponse.json().catch(() => ({}));
+    const data = await openAIResponse.json().catch(() => ({}));
 
-    if (!claudeResponse.ok) {
-      return sendJson(res, claudeResponse.status, {
-        error: data?.error?.message || "Claude request failed.",
+    if (!openAIResponse.ok) {
+      return sendJson(res, openAIResponse.status, {
+        error: data?.error?.message || "OpenAI request failed.",
       });
     }
 
-    return sendJson(res, 200, data);
+    const text = extractOutputText(data);
+
+    return sendJson(res, 200, {
+      content: [{ type: "text", text }],
+      output_text: text,
+    });
   } catch {
-    return sendJson(res, 502, { error: "Could not reach Claude." });
+    return sendJson(res, 502, { error: "Could not reach OpenAI." });
   }
 };
