@@ -3,24 +3,31 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-src 'self' blob:; child-src 'self' blob:; worker-src 'none'; media-src 'none'; frame-ancestors 'none'; navigate-to 'self' blob:" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-src 'self' blob:; child-src 'self' blob:; worker-src 'self'; media-src 'none'; manifest-src 'self'; frame-ancestors 'none'; navigate-to 'self' blob:" />
     <meta name="referrer" content="no-referrer" />
     <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()" />
+    <meta name="theme-color" content="#c2532f" />
     <title>Create_AI</title>
-    <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" href="assets/logo.png" />
     <link rel="stylesheet" href="assets/styles.css" />
   </head>
   <body>
-    <main class="shell">
-      <section class="brand-panel" aria-label="App welcome">
-        <div class="brand-logo" aria-hidden="true">
-          <img src="assets/logo.svg" alt="" />
-        </div>
+    <div class="mesh-background" aria-hidden="true">
+      <span class="mesh-band amber"></span>
+      <span class="mesh-band clay"></span>
+      <span class="mesh-band teal"></span>
+      <span class="mesh-band rose"></span>
+    </div>
+
+    <main class="auth-shell" id="auth-shell">
+      <section class="brand-panel" aria-label="Create_AI">
+        <img class="brand-logo" src="assets/logo.png" alt="Create_AI logo" />
         <h1>Create_AI</h1>
-        <p>Design, verify, and launch browser-ready AI apps from one workspace.</p>
+        <p>AI app builder workspace</p>
       </section>
 
-      <section class="auth-panel">
+      <section class="auth-panel" aria-label="Login flow">
         <div class="stepper" aria-label="Progress">
           <span class="step-dot active" data-step-dot="account">1</span>
           <span class="step-line"></span>
@@ -31,22 +38,26 @@
 
         <form class="screen active" id="account-form" novalidate>
           <div class="screen-heading">
-            <p class="eyebrow">Start</p>
-            <h2>Enter your account details</h2>
+            <span class="eyebrow">Account</span>
+            <h2>Email and password</h2>
           </div>
 
           <label class="field">
             <span>Email id</span>
-            <input id="email" name="email" type="email" autocomplete="email" maxlength="254" required />
+            <input id="email" type="email" autocomplete="email" maxlength="254" required />
             <small class="error" id="email-error"></small>
           </label>
 
           <label class="field">
             <span>Password</span>
-            <div class="password-row">
-              <input id="password" name="password" type="password" autocomplete="current-password" minlength="8" maxlength="128" required />
-              <button class="icon-button" type="button" id="toggle-password" aria-label="Show password" title="Show password">Show</button>
+            <div class="inline-field">
+              <input id="password" type="password" autocomplete="current-password" maxlength="128" required />
+              <button class="icon-button" id="toggle-password" type="button" aria-label="Show password" title="Show password">Show</button>
             </div>
+            <div class="strength-meter" aria-hidden="true">
+              <span id="password-strength-bar"></span>
+            </div>
+            <small class="strength-label" id="password-strength-label">Enter at least 8 characters.</small>
             <small class="error" id="password-error"></small>
           </label>
 
@@ -55,73 +66,93 @@
 
         <form class="screen" id="profile-form" novalidate>
           <div class="screen-heading">
-            <p class="eyebrow">Profile</p>
-            <h2>Add your contact details</h2>
+            <span class="eyebrow">Profile</span>
+            <h2>Name and mobile</h2>
           </div>
 
           <label class="field">
             <span>Name</span>
-            <input id="full-name" name="full-name" type="text" autocomplete="name" maxlength="80" required />
+            <input id="full-name" type="text" autocomplete="name" maxlength="80" required />
             <small class="error" id="name-error"></small>
           </label>
 
           <label class="field">
             <span>Mobile number</span>
-            <input id="mobile" name="mobile" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" required />
+            <input id="mobile" type="tel" autocomplete="tel" inputmode="tel" maxlength="20" required />
             <small class="error" id="mobile-error"></small>
           </label>
 
           <div class="actions">
-            <button class="secondary-button" type="button" id="back-to-account">Back</button>
+            <button class="secondary-button" id="back-to-account" type="button">Back</button>
             <button class="primary-button" type="submit">Next</button>
           </div>
         </form>
 
         <section class="screen" id="sent-screen" aria-live="polite">
           <div class="screen-heading">
-            <p class="eyebrow">Email sent</p>
-            <h2>Check your email</h2>
+            <span class="eyebrow">Email sent</span>
+            <h2>Open the login link</h2>
           </div>
 
           <div class="mail-preview">
-            <p class="mail-to" id="mail-to"></p>
-            <p class="mail-subject">Create_AI login link</p>
-            <a class="verification-link" id="verification-link" href="#">Open verification link</a>
+            <div class="mock-inbox-bar">Mock inbox</div>
+            <p id="mail-to"></p>
+            <strong>Create_AI · Confirm your login</strong>
+            <p class="mail-body">Tap the secure link below to finish signing in.</p>
+            <a id="verification-link" href="#">Open your login link</a>
           </div>
 
-          <button class="secondary-button full-width" type="button" id="edit-profile">Edit details</button>
+          <button class="secondary-button full-width" id="edit-profile" type="button">Edit details</button>
         </section>
 
         <section class="screen" id="confirm-screen" aria-live="polite">
           <div class="screen-heading">
-            <p class="eyebrow">Confirm</p>
+            <span class="eyebrow">Confirm</span>
             <h2>Do you want to login to this app?</h2>
           </div>
-
-          <div class="confirm-box">
-            <p id="confirm-email"></p>
-          </div>
-
-          <button class="primary-button" type="button" id="enter-app">Okay</button>
+          <div class="confirm-box" id="confirm-email"></div>
+          <button class="primary-button" id="enter-app" type="button">Okay</button>
         </section>
+      </section>
+    </main>
 
-        <section class="screen app-screen" id="app-screen" aria-live="polite">
-          <div class="app-topbar">
-            <div>
-              <div class="mini-brand" aria-label="Create_AI">
-                <span class="mini-logo" aria-hidden="true">A</span>
-                <span>Create_AI</span>
-              </div>
-              <p class="eyebrow">Welcome</p>
-              <h2 id="welcome-name">You are inside the app</h2>
-            </div>
-            <div class="app-actions">
-              <a class="secondary-button compact" id="download-create-ai" href="#" download="Create_AI.html">Download App</a>
-              <button class="secondary-button compact" type="button" id="logout">Logout</button>
-            </div>
+    <main class="app-shell hidden" id="app-shell">
+      <aside class="sidebar">
+        <div class="mini-brand">
+          <img src="assets/logo.png" alt="" />
+          <span>Create_AI</span>
+        </div>
+
+        <nav class="nav-tabs" aria-label="App sections">
+          <button class="active" type="button" data-section="home">Home</button>
+          <button type="button" data-section="chat">AI Chatbot</button>
+          <button type="button" data-section="create">App Builder</button>
+          <button type="button" data-section="projects">Projects</button>
+          <button type="button" data-section="settings">Settings</button>
+        </nav>
+
+        <div class="account-strip">
+          <strong id="sidebar-name"></strong>
+          <span id="sidebar-email"></span>
+          <button class="text-button" id="logout" type="button">Logout</button>
+        </div>
+      </aside>
+
+      <section class="app-main">
+        <header class="topbar">
+          <div>
+            <span class="eyebrow">Workspace</span>
+            <h2 id="welcome-name">Welcome</h2>
           </div>
+          <div class="topbar-actions">
+            <button class="secondary-button compact" id="install-create-ai" type="button">Install</button>
+            <button class="secondary-button compact" id="download-create-ai" type="button">Download App</button>
+            <button class="secondary-button compact" id="clear-local-data" type="button">Clear Local Data</button>
+          </div>
+        </header>
 
-          <div class="workspace-grid">
+        <section class="app-section active" id="section-home">
+          <div class="metric-grid">
             <article>
               <span>Account</span>
               <strong id="account-email"></strong>
@@ -131,146 +162,194 @@
               <strong id="account-mobile"></strong>
             </article>
             <article>
-              <span>Status</span>
-              <strong>Verified</strong>
+              <span>Session</span>
+              <strong id="session-expiry">Auto-lock</strong>
             </article>
           </div>
 
-          <section class="safety-section" aria-labelledby="safety-title">
-            <div class="section-header">
+          <div class="home-grid">
+            <article>
+              <span class="eyebrow">Assistant</span>
+              <h3>AI Chatbot</h3>
+              <p id="home-chat-summary">Claude-ready chat memory</p>
+            </article>
+            <article>
+              <span class="eyebrow">Builder</span>
+              <h3>App Builder</h3>
+              <p id="home-create-summary">No project yet</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="app-section" id="section-chat" aria-labelledby="chat-title">
+          <div class="section-header">
+            <div>
+              <span class="eyebrow">Assistant</span>
+              <h3 id="chat-title">AI Chatbot</h3>
+              <p class="section-subtitle">ChatGPT-style bubbles, memory, suggested prompts, and Claude backend support.</p>
+            </div>
+            <button class="secondary-button compact" id="clear-chat" type="button">Clear</button>
+          </div>
+
+          <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
+
+          <div class="quick-prompts" aria-label="Quick prompts">
+            <button type="button" data-prompt="Explain quantum computing simply">Explain</button>
+            <button type="button" data-prompt="Write a haiku about the ocean">Write</button>
+            <button type="button" data-prompt="Give me 3 dinner ideas">Ideas</button>
+            <button type="button" data-prompt="Help me plan my week">Plan</button>
+          </div>
+
+          <form class="chat-form" id="chat-form">
+            <label class="sr-only" for="chat-input">Message AI Chatbot</label>
+            <textarea id="chat-input" maxlength="1500" rows="2" placeholder="Ask anything"></textarea>
+            <button class="primary-button chat-send" type="submit">Send</button>
+          </form>
+        </section>
+
+        <section class="app-section" id="section-create" aria-labelledby="create-title">
+          <div class="section-header">
+            <div>
+              <span class="eyebrow">Builder</span>
+              <h3 id="create-title">App Builder</h3>
+              <p class="section-subtitle">Describe your idea. Create_AI generates a working app from it.</p>
+            </div>
+            <span class="status-pill" id="publish-status">Not created</span>
+          </div>
+
+          <form class="builder-form" id="create-form">
+            <label class="field">
+              <span>Project name</span>
+              <input id="project-name" type="text" autocomplete="off" maxlength="120" required />
+              <small class="error" id="project-name-error"></small>
+            </label>
+
+            <label class="field">
+              <span>Purpose / problem it should solve</span>
+              <textarea id="project-problem" maxlength="1500" rows="3" required></textarea>
+              <small class="error" id="project-problem-error"></small>
+            </label>
+
+            <label class="field">
+              <span>Kinds of input the user gives</span>
+              <textarea id="project-inputs" maxlength="1500" rows="3" required></textarea>
+              <small class="error" id="project-inputs-error"></small>
+            </label>
+
+            <label class="field">
+              <span>Kind of output the user wants</span>
+              <textarea id="project-outputs" maxlength="1500" rows="3" required></textarea>
+              <small class="error" id="project-outputs-error"></small>
+            </label>
+
+            <button class="primary-button full-width" type="submit">Build my app</button>
+            <p class="helper-note">Generated live in preview. Connect `/api/messages` for true Claude-powered generation.</p>
+          </form>
+
+          <div class="generated-area hidden" id="generated-area">
+            <div class="generated-topbar">
               <div>
-                <p class="eyebrow">Protected</p>
-                <h3 id="safety-title">Safety Mode</h3>
+                <span class="eyebrow">Final output</span>
+                <h4 id="generated-title"></h4>
               </div>
-              <span class="publish-badge live">On</span>
-            </div>
-
-            <div class="safety-grid">
-              <article>
-                <span>Password</span>
-                <strong>Never saved</strong>
-              </article>
-              <article>
-                <span>Session</span>
-                <strong id="session-expiry">Auto-lock enabled</strong>
-              </article>
-              <article>
-                <span>Preview</span>
-                <strong>Sandboxed</strong>
-              </article>
-            </div>
-
-            <button class="secondary-button full-width" type="button" id="clear-local-data">Clear Local Data</button>
-          </section>
-
-          <section class="create-section" aria-labelledby="create-title">
-            <div class="section-header">
-              <div>
-                <p class="eyebrow">Builder</p>
-                <h3 id="create-title">Create</h3>
+              <div class="generated-actions">
+                <button class="secondary-button compact active" id="show-preview" type="button">Preview</button>
+                <button class="secondary-button compact" id="show-code" type="button">Code</button>
+                <button class="secondary-button compact" id="copy-generated-app" type="button">Copy</button>
+                <a class="secondary-button compact" id="open-generated-app" href="#" target="_blank" rel="noopener noreferrer">Open</a>
+                <a class="secondary-button compact" id="download-generated-app" href="#" download="generated-app.html">Download</a>
+                <button class="primary-button compact" id="publish-generated-app" type="button">Publish</button>
               </div>
-              <span class="publish-badge" id="publish-status">Not created</span>
             </div>
 
-            <form class="create-form" id="create-form">
-              <label class="field">
-                <span>Project name</span>
-                <input id="project-name" type="text" autocomplete="off" maxlength="120" required />
-                <small class="error" id="project-name-error"></small>
-              </label>
+            <iframe class="generated-preview" id="generated-preview" title="Generated app preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
+            <pre class="generated-code hidden" id="generated-code"></pre>
 
+            <form class="update-form" id="update-form">
               <label class="field">
-                <span>Purpose of the project</span>
-                <textarea id="project-purpose" rows="3" maxlength="1000" required></textarea>
-                <small class="error" id="project-purpose-error"></small>
+                <span>Update request</span>
+                <textarea id="update-request" maxlength="1200" rows="2" placeholder="Example: add dark mode, add a reset button, make it more like a coding assistant"></textarea>
               </label>
-
-              <label class="field">
-                <span>What problems should it solve?</span>
-                <textarea id="project-problems" rows="3" maxlength="1000" required></textarea>
-                <small class="error" id="project-problems-error"></small>
-              </label>
-
-              <label class="field">
-                <span>Kinds of input the user gives</span>
-                <textarea id="project-inputs" rows="3" maxlength="1000" required></textarea>
-                <small class="error" id="project-inputs-error"></small>
-              </label>
-
-              <label class="field">
-                <span>Kind of output the user is looking at</span>
-                <textarea id="project-outputs" rows="3" maxlength="1000" required></textarea>
-                <small class="error" id="project-outputs-error"></small>
-              </label>
-
-              <button class="primary-button" type="submit">Create and Publish</button>
+              <button class="secondary-button full-width" type="submit">Apply Update</button>
             </form>
+          </div>
+        </section>
 
-            <div class="generated-app hidden" id="generated-app">
-              <div class="generated-topbar">
-                <div>
-                  <p class="eyebrow">Final Output</p>
-                  <h4 id="generated-title"></h4>
-                </div>
-                <div class="generated-actions">
-                  <a class="secondary-button compact" id="open-generated-app" href="#" target="_blank" rel="noopener noreferrer">Open</a>
-                  <a class="secondary-button compact" id="download-generated-app" href="#" download="generated-app.html">Download</a>
-                </div>
-              </div>
-
-              <div class="publish-grid">
-                <article>
-                  <span>Google Chrome</span>
-                  <strong>Published locally</strong>
-                </article>
-                <article>
-                  <span>Web app</span>
-                  <strong>Ready</strong>
-                </article>
-                <article>
-                  <span>Updates</span>
-                  <strong id="update-count">0</strong>
-                </article>
-              </div>
-
-              <iframe class="app-preview" id="app-preview" title="Generated app preview" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe>
-
-              <form class="update-form" id="update-form">
-                <label class="field">
-                  <span>Need updates?</span>
-                  <textarea id="update-request" rows="3" maxlength="1000" placeholder="Describe the update you want"></textarea>
-                </label>
-                <button class="secondary-button full-width" type="submit">Apply Update</button>
-              </form>
+        <section class="app-section" id="section-projects">
+          <div class="section-header">
+            <div>
+              <span class="eyebrow">Saved</span>
+              <h3>Projects</h3>
             </div>
-          </section>
+          </div>
+          <div class="project-list" id="project-list"></div>
+        </section>
 
-          <section class="ai-chatbot-section" aria-labelledby="ai-chatbot-title">
-            <div class="section-header">
-              <div>
-                <p class="eyebrow">Assistant</p>
-                <h3 id="ai-chatbot-title">AI Chatbot</h3>
-              </div>
-              <button class="secondary-button compact" type="button" id="clear-chat">Clear</button>
+        <section class="app-section" id="section-settings">
+          <div class="section-header">
+            <div>
+              <span class="eyebrow">Settings</span>
+              <h3>Security & privacy</h3>
+              <p class="section-subtitle">What Create_AI protects today, and what production still needs.</p>
             </div>
+            <span class="status-pill live">On</span>
+          </div>
 
-            <div class="chat-messages" id="chat-messages" aria-live="polite"></div>
-
-            <div class="quick-prompts" aria-label="Quick prompts">
-              <button type="button" data-prompt="Summarize my account details">Summarize</button>
-              <button type="button" data-prompt="Help me plan my day">Plan</button>
-              <button type="button" data-prompt="Write a professional email">Email</button>
-            </div>
-
-            <form class="chat-form" id="chat-form">
-              <label class="sr-only" for="chat-input">Message AI Chatbot</label>
-              <textarea id="chat-input" rows="2" maxlength="1000" placeholder="Message AI Chatbot"></textarea>
-              <button class="primary-button chat-send" type="submit" aria-label="Send message">Send</button>
-            </form>
-          </section>
+          <div class="safety-grid">
+            <article>
+              <strong>Password never saved</strong>
+              <span>Cleared after account step</span>
+            </article>
+            <article>
+              <strong>Claude-ready assistant</strong>
+              <span>Uses backend when connected, local fallback in static preview</span>
+            </article>
+            <article>
+              <strong>Sandboxed previews</strong>
+              <span>Generated apps stay isolated</span>
+            </article>
+            <article>
+              <strong>Input limits</strong>
+              <span>Oversized data blocked</span>
+            </article>
+            <article>
+              <strong>Production still needs a backend</strong>
+              <span>Real password hashing, rate limits, email sending, and a server-side API key</span>
+            </article>
+          </div>
         </section>
       </section>
     </main>
+
+    <div class="modal hidden" id="publish-modal" role="dialog" aria-modal="true" aria-labelledby="publish-title">
+      <div class="modal-card">
+        <button class="modal-close" id="close-publish-modal" type="button" aria-label="Close">x</button>
+        <img src="assets/logo.png" alt="" />
+        <h3 id="publish-title">Publish your app</h3>
+        <p>Your generated app is ready as a single HTML file. A sandboxed browser app cannot deploy itself, so use these export steps.</p>
+        <div class="publish-steps">
+          <article><strong>1. Web</strong><span>Download the HTML and upload it to Netlify Drop, GitHub Pages, or another static host.</span></article>
+          <article><strong>2. Chrome</strong><span>Add a manifest file and load the folder from chrome://extensions with Load unpacked.</span></article>
+        </div>
+        <div class="modal-actions">
+          <a class="primary-button" id="publish-download-link" href="#" download="generated-app.html">Download HTML</a>
+          <button class="secondary-button" id="publish-copy-code" type="button">Copy Code</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal hidden" id="install-modal" role="dialog" aria-modal="true" aria-labelledby="install-title">
+      <div class="modal-card">
+        <button class="modal-close" id="close-install-modal" type="button" aria-label="Close">x</button>
+        <img src="assets/logo.png" alt="" />
+        <h3 id="install-title">Install Create_AI</h3>
+        <p>Chrome shows the native install prompt after the site is hosted over HTTPS. In this local preview, use the fallback steps below.</p>
+        <div class="publish-steps">
+          <article><strong>Desktop Chrome</strong><span>Click the install icon in the address bar or open the menu and choose Install Create_AI.</span></article>
+          <article><strong>Mobile</strong><span>Open the browser menu and choose Add to Home screen.</span></article>
+        </div>
+      </div>
+    </div>
 
     <script src="assets/app.js"></script>
   </body>

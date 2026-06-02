@@ -1,0 +1,18 @@
+{
+  "name": "Create_AI",
+  "short_name": "Create_AI",
+  "description": "Build apps and chat with AI.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#f8efe4",
+  "theme_color": "#c2532f",
+  "icons": [
+    {
+      "src": "assets/logo.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
