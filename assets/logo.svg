@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Create_AI logo">
+  <defs>
+    <linearGradient id="logo-prism" x1="20" y1="16" x2="140" y2="142" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7df2df" />
+      <stop offset="0.46" stop-color="#7a67ff" />
+      <stop offset="1" stop-color="#ffbe4f" />
+    </linearGradient>
+    <linearGradient id="logo-glass" x1="24" y1="18" x2="126" y2="134" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.34" />
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0.04" />
+    </linearGradient>
+    <filter id="logo-glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="160" height="160" rx="32" fill="#111c24" />
+  <path d="M28 12h78l34 34v86c0 8.8-7.2 16-16 16H28c-8.8 0-16-7.2-16-16V28c0-8.8 7.2-16 16-16Z" fill="url(#logo-glass)" stroke="rgba(255,255,255,.54)" stroke-width="1.2" />
+  <path d="M106 12v28c0 3.3 2.7 6 6 6h28L106 12Z" fill="rgba(255,255,255,.2)" />
+  <path d="M80 27 128 55v50l-48 28-48-28V55l48-28Z" fill="url(#logo-prism)" filter="url(#logo-glow)" />
+  <path d="M80 79 128 55v50l-48 28V79Z" fill="rgba(22,28,36,.5)" />
+  <path d="M80 79 32 55v50l48 28V79Z" fill="rgba(255,255,255,.14)" />
+  <path d="M80 43 111 61 80 79 49 61 80 43Z" fill="rgba(255,255,255,.82)" />
+  <path d="M80 48 105 115H91l-5-15H62l-5 15H43l25-67h12Zm-14 40h16l-8-24-8 24Z" fill="#111c24" />
+  <path d="M42 38h22M96 122h24M31 84h20M109 78h20" fill="none" stroke="rgba(255,255,255,.64)" stroke-linecap="round" stroke-width="4" />
+  <path d="M118 30 123 41 134 46 123 51 118 62 113 51 102 46 113 41 118 30Z" fill="#ffbe4f" filter="url(#logo-glow)" />
+</svg>
